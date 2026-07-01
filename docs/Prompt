@@ -1,0 +1,64 @@
+# Contexto do Projeto: SPELLcialist - Grimório Ancestral (PWA)
+
+Atua como um Engenheiro de Software Full Stack Sénior e Especialista em UX/UI de RPG de Alta Fantasia. Estou a desenvolver um Progressive Web App (PWA) mobile-first voltado para jogadores de D&D 5e (versão clássica de 2014), focado especificamente na subclasse **Mago da Ordem dos Escribas (Order of Scribes)**. 
+
+O projeto usa **Next.js 16 (App Router)**, **Tailwind CSS v4** e **Dexie.js** para base de dados local indexada no navegador (IndexedDB) para garantir funcionamento 100% offline.
+
+Abaixo está o detalhamento completo do que foi feito, o porquê e os objetivos.
+
+---
+
+## 1. O Objetivo do Aplicativo
+O objetivo principal é criar um "Grimório Digital" reativo que funcione e passe a sensação tátil de um artefato físico medieval (um manuscrito encadernado em ferro e couro), mas que traga funcionalidades de automação digital pesada para combate. 
+O foco está na mecânica de **Hot Swap Elemental** do Mago Escriba: quando ele conjura uma magia de dano, ele pode alterar o tipo de dano original por outro tipo de dano presente em qualquer outra magia do mesmo nível que ele possua no seu grimório pessoal.
+
+---
+
+## 2. Brand & Estilo Visual (Guia de Estilo)
+O design foi construído com base num protótipo do Figma que mistura **Skeuomorfismo Táctil** com **Alta Fantasia Sombria**:
+- **Cores:** Base em *Preto Obsidian* (`#16121a`), superfícies de texto em *Pergaminho Envelhecido* (`#e9dfeb` e `#f4e4bc`), detalhes e bordas em *Ouro Velho* (`#e9c349`), e realces mágicos/ativos em *Violeta Místico* (`#d0bcff`).
+- **Tipografia (Injetada via Layout Head):** - Títulos: `EB Garamond` (estilo caligráfico/manuscrito antigo).
+  - Corpo de texto: `Literata` (legibilidade com aspeto literário/editorial).
+  - Metadados/Labels: `Source Serif 4` (estilo robusto e académico).
+- **Formatos:** Bordas e containers imitam papel rasgado, marcas de queimadura e cantos de ferro fundido com sombras tridimensionais internas (`box-shadow: inset`).
+
+---
+
+## 3. Arquitetura de Dados e Tipagem (`src/models/types.ts` e `spell.ts`)
+Unificámos todas as taxonomias e enums de D&D 5e (2014) em português no arquivo central de tipos:
+- **Danos suportados:** `'Força'`, `'Fogo'`, `'Gelo'`, `'Elétrico'`, `'Trovão'`, `'Ácido'`, `'Veneno'`, `'Psíquico'`, `'Radiante'`, `'Necrótico'`, `'Cortante'`, `'Perfurante'`, `'Concussão'`, `'None'`.
+- **Escolas de Magia:** `'Abjuração'`, `'Conjuração'`, `'Adivinhação'`, `'Encantamento'`, `'Evocação'`, `'Ilusão'`, `'Necromancia'`, `'Transmutação'`.
+- **Classes:** `'Mago'`, `'Feiticeiro'`, `'Bruxo'`, `'Clérigo'`, etc.
+
+A interface `Spell` está tipada com as colunas: `id`, `name`, `level`, `school`, `isRitual` (boolean crucial para Magos Escribas), `originalDamageType`, `currentDamageType`, `castingTime`, `range`, `target`, `components` (objeto estruturado para V, S, M), `description` e `classes`.
+
+---
+
+## 4. O que já foi Desenvolvido e Implementado
+
+### A. Estrutura de Navegação (Menu Inferior Nativo)
+A interface foi remodelada para mobile-first (max-w-md centralizado com bordas obsidian) contendo uma barra de navegação inferior fixa (Tab Bar) contendo as seguintes abas:
+1. **Grimório:** Onde ficam as magias guardadas na base de dados Dexie.js do personagem do jogador.
+2. **Santuário:** O catálogo global de magias do D&D 5e (onde o jogador pode consultar e "aprender/inscrever" magias novas para o seu Grimório).
+3. **Habilidades** e **Crônicas:** Bloqueadas com telas informativas de *Placeholder* para desenvolvimento futuro.
+
+### B. Visualização do Grimório em Formato de Livro (`GrimoireBookView.tsx`)
+Quando o jogador está na aba **Grimório**, o app renderiza a simulação de um livro antigo aberto:
+- **Página Esquerda (Índice):** Agrupa e lista dinamicamente as magias que o jogador salvou no banco de dados local por Círculos (Truques, 1º Círculo...).
+- **Página Direita (Detalhes):** Mostra os dados da magia selecionada no índice. Inclui o título em `EB Garamond`, a escola de magia, um **Selo de Cera Vermelho** que exibe o nível da magia, a descrição contínua em formato de livro, caixas de atributos de dano/alcance e uma **Barra de Fluido de Mana Violeta Animada** via CSS, cujo tamanho e comportamento variam se for um Truque ou magia de Círculo.
+
+### C. Sistema de Filtro e Banco de Dados (`level0.ts`, `level1.ts`...)
+Os dados estão divididos de forma modular em arquivos separados por nível (`catalog/level0.ts`, `level1.ts`...) e unificados via operador spread (`...`) num array dinâmico chamado `UNIVERSAL_SPELLS_CATALOG` dentro de `universalSpellsCatalog.ts`. 
+- Desenvolvemos e limpámos completamente o catálogo dos **Truques (Nível 0)** e **Magias de 1º Nível** baseados estritamente nas regras oficiais do Livro do Jogador de 2014, convertendo "pés" para metros e traduzindo os textos para português.
+
+### D. O Modal de Conjuração Hacker-Arcano (`CastModal.tsx`)
+Ao clicar em "Preparar Matriz" (ou no Selo de Cera), abre-se um modal com um contraste fantástico de roleplay:
+- **Hot Swap Elemental Automatizado:** O modal lê as magias salvas do utilizador e gera um menu contendo apenas os tipos de dano válidos das outras magias daquele mesmo nível que ele possui no grimório. Ao clicar num elemento, o dano da magia é alterado temporariamente em memória.
+- **Flavour de Compilação de Código:** Exibe uma caixa preta de terminal hacker que gera dinamicamente um bloco de código TypeScript simulando que a magia está a ser compilada e injetada na "Weave" (Trama da Magia), mudando as strings do import e das funções se a magia for um ritual (`SlotLevel.Ritual_Binding`) ou se o elemento sofrer override.
+
+---
+
+## Nosso Próximo Passo:
+Precisamos continuar a popular e automatizar o nosso ecossistema de dados. O objetivo atual é estruturar os catálogos dos círculos restantes de magias (do 2º ao 9º nível), garantindo que respeitem a tipagem rigorosa, a tradução do SRD 2014 em português, a conversão de métricas e os enums do `types.ts` (escola com acentuação e danos como "Gelo" e "Elétrico").
+
+Entendeste a arquitetura atual do projeto e os objetivos visuais/mecânicos? Aguardo as tuas sugestões e próximos passos.
