@@ -2,6 +2,27 @@ import { Spell } from '../spell';
 
 export const level0Spells: Spell[] = [
   {
+  "id": "teste-de-matrizes",
+  "name": "Laboratório de Elementos",
+  "level": 0,
+  "school": "Evocação",
+  "isRitual": false,
+  "originalDamageType": "None",
+  "currentDamageType": "None",
+  "castingTime": "1 Ação",
+  "range": "Auto",
+  "target": "Inspecionar Cores",
+  "components": {
+    "verbal": true,
+    "somatic": true,
+    "material": false
+  },
+  "description": "Este truque serve para testar as cores. Dispara uma esfera oscilante que causa 1d4 de dano de fogo, seguido por um estilhaço que causa 2d6 de dano de gelo. Logo após, uma faísca causa 3d8 de dano de raio ou dano elétrico. O impacto gera uma onda de som de 4d10 de dano de trovão, uma poça corrosiva de 1d12 de dano de ácido e uma nuvem gasosa de 2d4 de dano de veneno. Na mente do alvo, causa 3d6 de dano psíquico. Por fim, evoca uma explosão estelar de 4d8 de dano radiante, uma emanação murcha de 5d10 de dano necrótico e um feixe puro de 8d6 de dano de força. O efeito colateral cria lâminas que causam 1d6 de dano cortante, espinhos que causam 1d6 de dano perfurante e uma onda de choque que causa 1d6 de dano contundente.",
+  "classes": [
+    "Mago"
+  ]
+},
+  {
     "id": "ataque-certeiro",
     "name": "Ataque Certeiro",
     "level": 0,
@@ -31,8 +52,8 @@ export const level0Spells: Spell[] = [
     "level": 0,
     "school": "Transmutação",
     "isRitual": false,
-    "originalDamageType": "Força",
-    "currentDamageType": "Força",
+    "originalDamageType": "Energia",
+    "currentDamageType": "Energia",
     "castingTime": "1 Ação bonus",
     "range": "Toque",
     "target": "Uma criatura",

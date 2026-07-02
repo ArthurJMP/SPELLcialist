@@ -1,4 +1,4 @@
-import { DamageType, SchoolType, CharacterClass } from './types';
+import { DamageType, SchoolType, CharacterClass, AreaOfEffect } from './types';
 
 export interface ComponentData {
   verbal: boolean;
@@ -17,7 +17,8 @@ export interface Spell {
   originalDamageType: DamageType;
   currentDamageType: DamageType;
   castingTime: string;
-  range: string;                
+  range: string; 
+  areaOfEffect?: AreaOfEffect;               
   target: string;               
   components: ComponentData;
   description: string;
