@@ -133,56 +133,46 @@ export default function MainOrchestrator() {
           )}
         </section>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-6xl justify-center px-3 pb-3 2xl:max-w-[88rem]">
-          <div className="spellbook-shell flex w-full items-stretch justify-between gap-2 rounded-[26px] border border-[#4a3d23]/80 p-2 shadow-[0_-20px_50px_rgba(0,0,0,0.35)] backdrop-blur">
-            <button
-              onClick={() => setActiveTab('grimoire')}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-3 py-2 transition-all ${
-                activeTab === 'grimoire'
-                  ? 'bg-[#f4e4bc] text-[#1b1408] shadow-[inset_0_0_0_1px_rgba(126,99,35,0.18)]'
-                  : 'text-[#f4e4bc]/65 hover:bg-[#1b1408]/55 hover:text-[#f4e4bc]'
-              }`}
-            >
-              <span className="text-xl">📖</span>
-              <span className="font-label text-[10px] font-bold uppercase tracking-[0.22em]">Grimório</span>
-            </button>
+        <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#110d06] border-t border-[#8a6f2d]/15 flex items-center justify-around px-4 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.5)]">
+          <button
+            onClick={() => setActiveTab('grimoire')}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all ${
+              activeTab === 'grimoire' ? 'text-[#d0bcff]' : 'text-[#cbc3d7]/50'
+            }`}
+          >
+            <span className="text-2xl mb-0.5">📖</span>
+            <span className="text-[9px] font-bold tracking-wide uppercase font-label">Grimório</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab('sanctuary')}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-3 py-2 transition-all ${
-                activeTab === 'sanctuary'
-                  ? 'bg-[#f4e4bc] text-[#1b1408] shadow-[inset_0_0_0_1px_rgba(126,99,35,0.18)]'
-                  : 'text-[#f4e4bc]/65 hover:bg-[#1b1408]/55 hover:text-[#f4e4bc]'
-              }`}
-            >
-              <span className="text-xl">⛪</span>
-              <span className="font-label text-[10px] font-bold uppercase tracking-[0.22em]">Santuário</span>
-            </button>
+          <button
+            onClick={() => setActiveTab('sanctuary')}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all ${
+              activeTab === 'sanctuary' ? 'text-[#d0bcff]' : 'text-[#cbc3d7]/50'
+            }`}
+          >
+            <span className="text-2xl mb-0.5">⛪</span>
+            <span className="text-[9px] font-bold tracking-wide uppercase font-label">Santuário</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-3 py-2 transition-all ${
-                activeTab === 'skills'
-                  ? 'bg-[#f4e4bc] text-[#1b1408] shadow-[inset_0_0_0_1px_rgba(126,99,35,0.18)]'
-                  : 'text-[#f4e4bc]/45 hover:bg-[#1b1408]/55 hover:text-[#f4e4bc]'
-              }`}
-            >
-              <span className="text-xl opacity-70">🛡️</span>
-              <span className="font-label text-[10px] font-bold uppercase tracking-[0.22em] opacity-80">Habilidades</span>
-            </button>
+          <button
+            onClick={() => setActiveTab('skills')}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all ${
+              activeTab === 'skills' ? 'text-[#d0bcff]' : 'text-[#cbc3d7]/50'
+            }`}
+          >
+            <span className="text-2xl mb-0.5">🛡️</span>
+            <span className="text-[9px] font-bold tracking-wide uppercase font-label">Habilidades</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab('chronicles')}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-3 py-2 transition-all ${
-                activeTab === 'chronicles'
-                  ? 'bg-[#f4e4bc] text-[#1b1408] shadow-[inset_0_0_0_1px_rgba(126,99,35,0.18)]'
-                  : 'text-[#f4e4bc]/45 hover:bg-[#1b1408]/55 hover:text-[#f4e4bc]'
-              }`}
-            >
-              <span className="text-xl opacity-70">⏳</span>
-              <span className="font-label text-[10px] font-bold uppercase tracking-[0.22em] opacity-80">Crônicas</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setActiveTab('chronicles')}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all ${
+              activeTab === 'chronicles' ? 'text-[#d0bcff]' : 'text-[#cbc3d7]/50'
+            }`}
+          >
+            <span className="text-2xl mb-0.5">⏳</span>
+            <span className="text-[9px] font-bold tracking-wide uppercase font-label">Crônicas</span>
+          </button>
         </nav>
       </div>
     </main>
