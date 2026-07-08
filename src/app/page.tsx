@@ -32,6 +32,7 @@ export default function MainOrchestrator() {
   const [spellSlots, setSpellSlots] = useState<Record<number, SpellSlotInfo>>(INITIAL_SPELL_SLOTS);
   const learnedSpells = useLiveQuery(() => GrimoireController.getAllSpells()) || [];
   const [logs, setLogs] = useState<string[]>([]);
+  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
 
   useEffect(() => {
     void GrimoireController.resetLegacyGrimoireIfNeeded();
@@ -110,6 +111,7 @@ export default function MainOrchestrator() {
               onNavigateToCatalog={() => setActiveTab('sanctuary')}
               spellSlots={spellSlots}
               onUpdateSpellSlot={updateSpellSlot}
+              onSelectedSpellChange={setSelectedSpell}
             />
           )}
 
@@ -133,7 +135,9 @@ export default function MainOrchestrator() {
           )}
         </section>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#110d06] border-t border-[#8a6f2d]/15 flex items-center justify-around px-4 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.5)]">
+        <nav className={`fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#110d06] border-t border-[#8a6f2d]/15 flex items-center justify-around px-4 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.5)] transition-all duration-200 ${
+          selectedSpell && activeTab === 'grimoire' ? 'hidden md:flex' : 'flex'
+        }`}>
           <button
             onClick={() => setActiveTab('grimoire')}
             className={`flex flex-col items-center justify-center w-full h-full transition-all ${
