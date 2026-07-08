@@ -11,6 +11,7 @@ interface GrimoireViewProps {
   onNavigateToCatalog: () => void;
   spellSlots: Record<number, { current: number; max: number }>;
   onUpdateSpellSlot: (level: number, field: 'current' | 'max', delta: number) => void;
+  onSelectedSpellChange?: (spell: Spell | null) => void;
 }
 
 const highlightKeywords = (text: string) => {
@@ -32,6 +33,7 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
   onNavigateToCatalog,
   spellSlots,
   onUpdateSpellSlot,
+  onSelectedSpellChange,
 }) => {
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,24 +42,36 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
   const [spellToDelete, setSpellToDelete] = useState<Spell | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedCircleForSlots, setSelectedCircleForSlots] = useState<number | null>(null);
-  const [ability, setAbility] = useState<HabilityType | ''>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('spell_ability') as HabilityType) || '';
-    return '';
-  });
-  const [bp, setBp] = useState<number | ''>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('spell_bp');
-      return saved !== null ? Number(saved) : '';
+  const [ability, setAbility] = useState<HabilityType | ''>('');
+  const [bp, setBp] = useState<number | ''>('');
+  const [modConj, setModConj] = useState<number | ''>('');
+
+  useEffect(() => {
+    const savedAbility = localStorage.getItem('spell_ability') as HabilityType | null;
+    if (savedAbility) setAbility(savedAbility);
+
+    const savedBp = localStorage.getItem('spell_bp');
+    if (savedBp !== null) setBp(Number(savedBp));
+
+    const savedMod = localStorage.getItem('spell_mod');
+    if (savedMod !== null) setModConj(Number(savedMod));
+  }, []);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (selectedSpell && isMobile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
-    return '';
-  });
-  const [modConj, setModConj] = useState<number | ''>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('spell_mod');
-      return saved !== null ? Number(saved) : '';
-    }
-    return '';
-  });
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedSpell]);
+
+  useEffect(() => {
+    onSelectedSpellChange?.(selectedSpell);
+  }, [selectedSpell, onSelectedSpellChange]);
 
   // Cálculos dinâmicos tratando o estado zerado/nulo
   const spellCD = (bp !== '' && modConj !== '') ? 8 + bp + modConj : '--';
@@ -214,10 +228,17 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
 
             return (
               <div key={level} className="rounded-[1.25rem] border border-[#8a6f2d]/22 bg-[#f8edcd]/70 overflow-hidden">
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleLevel(level)}
-                  className="w-full flex items-center justify-between gap-3 border-b border-[#8a6f2d]/15 p-3 hover:bg-[#f8f0d7] transition"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleLevel(level);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between gap-3 border-b border-[#8a6f2d]/15 p-3 hover:bg-[#f8f0d7] transition cursor-pointer select-none"
                 >
                   <div className="text-left flex-1">
                     <h3 className="font-heading text-xl font-bold text-[#1b1408] leading-tight">
@@ -267,7 +288,7 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
                       ▼
                     </span>
                   </div>
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="p-3 space-y-2">
@@ -346,7 +367,8 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
         )}
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4 hide-scrollbar">
-          <div className="relative flex justify-between items-start w-full pr-16 border-b border-[#8a6f2d]/20 pb-3">
+          {/* 1. Cabeçalho */}
+          <div className="relative flex justify-between items-start w-full pr-16 border-b border-[#8a6f2d]/20 pb-3 mb-4">
             <div>
               <h2 className="text-2xl font-bold text-[#1b1408]">{selectedSpell.name}</h2>
               <p className="text-xs italic text-[#8a6f2d] mt-0.5">{selectedSpell.school}</p>
@@ -366,57 +388,57 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
             </button>
           </div>
 
-          <div className="bg-[#1b1408]/5 border border-[#8a6f2d]/10 rounded-2xl p-4 shadow-inner">
-            <div className="max-h-[240px] overflow-y-auto pr-1 text-xs text-[#1b1408] leading-relaxed text-justify scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {highlightKeywords(selectedSpell.description)}
+          {/* 3 e 4. Informações de Combate Rápido primeiro */}
+          <div className="space-y-3 mb-4">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Bloco Execução */}
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-3 text-[#f4e4bc]">
+                <span className="text-xs">⏱️</span>
+                <p className="text-[9px] uppercase tracking-wider text-[#d0bcff] font-bold">Execução</p>
+                <p className="text-xs font-bold mt-0.5">{selectedSpell.castingTime}</p>
+              </div>
+              {/* Bloco Alcance / Área */}
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-3 text-[#f4e4bc]">
+                <span className="text-xs">📏</span>
+                <p className="text-[9px] uppercase tracking-wider text-[#d0bcff] font-bold">Alcance / Área</p>
+                <p className="text-xs font-bold mt-0.5 text-center leading-tight">
+                  {selectedSpell.range}
+                  {selectedSpell.areaOfEffect && (
+                    <span className="block text-[10px] text-amber-300 font-normal mt-0.5">
+                      {selectedSpell.areaOfEffect.type === 'Esfera' && '🔴'}
+                      {selectedSpell.areaOfEffect.type === 'Cone' && '📐'}
+                      {selectedSpell.areaOfEffect.type === 'Cubo' && '📦'}
+                      {selectedSpell.areaOfEffect.type === 'Linha' && '⚡'}
+                      {' '}{selectedSpell.areaOfEffect.type} ({selectedSpell.areaOfEffect.size})
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:gap-2">
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-2 text-[#f4e4bc]">
-              <span className="text-xs">⏱️</span>
-              <p className="text-[9px] uppercase tracking-wider text-[#d0bcff] font-bold">Execução</p>
-              <p className="text-sm font-bold mt-0.5">{selectedSpell.castingTime}</p>
-            </div>
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-2 text-[#f4e4bc]">
-              <span className="text-xs">📏</span>
-              <p className="text-[9px] uppercase tracking-wider text-[#d0bcff] font-bold">Alcance / Área</p>
-              <p className="text-xs font-bold mt-0.5 text-center leading-tight">
-                {selectedSpell.range}
-                {selectedSpell.areaOfEffect && (
-                  <span className="block text-[10px] text-amber-300 font-normal mt-0.5">
-                    {selectedSpell.areaOfEffect.type === 'Esfera' && '🔴'}
-                    {selectedSpell.areaOfEffect.type === 'Cone' && '📐'}
-                    {selectedSpell.areaOfEffect.type === 'Cubo' && '📦'}
-                    {selectedSpell.areaOfEffect.type === 'Linha' && '⚡'}
-                    {' '}{selectedSpell.areaOfEffect.type} ({selectedSpell.areaOfEffect.size})
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="col-span-2 rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-4 text-[#f4e4bc] flex flex-col items-center gap-3">
+            {/* Bloco Componentes & Materiais */}
+            <div className="rounded-2xl border border-[#8a6f2d]/18 bg-[#1b1408] p-4 text-[#f4e4bc] flex flex-col items-center gap-3">
               <p className="text-[9px] uppercase tracking-wider text-[#d0bcff] font-bold">Componentes</p>
-              
-              {/* Badges de V S M */}
               <div className="flex justify-center gap-2">
                 <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${selectedSpell.components.verbal ? 'bg-indigo-900/40 text-indigo-200 border-indigo-500/30' : 'opacity-30 border-neutral-700'}`}>VERBAL</span>
                 <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${selectedSpell.components.somatic ? 'bg-amber-900/40 text-amber-200 border-amber-500/30' : 'opacity-30 border-neutral-700'}`}>SOMÁTICO</span>
                 <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${selectedSpell.components.material ? 'bg-emerald-900/40 text-emerald-200 border-emerald-500/30' : 'opacity-30 border-neutral-700'}`}>MATERIAL</span>
               </div>
-
-              {/* Descrição Material exibida sempre abaixo se existir, sem tooltips complicadas */}
               {selectedSpell.components.material && selectedSpell.components.materialDescription && (
-                <div className="w-full pt-3 border-t border-[#8a6f2d]/20 mt-2 text-left">
+                <div className="w-full pt-3 border-t border-[#8a6f2d]/20 mt-1 text-left">
                   <p className="text-sm text-[#f4e4bc]/90 leading-relaxed">
-                    <strong className="text-[#d0bcff] font-mono tracking-wide uppercase text-[11px] block mb-1">
-                      🎒 Materiais Necessários:
-                    </strong>
-                    <span className="italic">
-                      {selectedSpell.components.materialDescription}
-                    </span>
+                    <strong className="text-[#d0bcff] font-mono tracking-wide uppercase text-[11px] block mb-1">🎒 Materiais Necessários:</strong>
+                    <span className="italic">{selectedSpell.components.materialDescription}</span>
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* 5. Descrição da Magia agora por último na base */}
+          <div className="bg-[#1b1408]/5 border border-[#8a6f2d]/10 rounded-2xl p-4 shadow-inner">
+            <div className="max-h-[280px] overflow-y-auto pr-1 text-xs text-[#1b1408] leading-relaxed text-justify scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {highlightKeywords(selectedSpell.description)}
             </div>
           </div>
         </div>
@@ -435,25 +457,48 @@ export const GrimoireView: React.FC<GrimoireViewProps> = ({
 
   return (
     <>
-      <section className="grid gap-4 md:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)] md:gap-5 md:min-h-[calc(100vh-240px)]">
-        <div className="hidden md:block">{renderSpellList(false)}</div>
-        {/* VERSÃO PC: Mantém o comportamento original integrado no grid do lado direito da tela */}
-        <div className="hidden md:block w-full bg-[#f4e4bc] rounded-[1.75rem] border border-[#b39b63]/60 p-4 sm:p-5 sticky top-4 max-h-[85vh] overflow-y-auto">
-          {renderSpellDetail(false, false)}
+      {/* VERSÃO MOBILE */}
+      <div className="md:hidden">
+        {!selectedSpell ? (
+          <div className="p-4 pb-24">
+            {renderSpellList(true)}
+          </div>
+        ) : (
+          /* MODAL MOBILE CLÁSSICO: Tela cheia, por cima do menu (z-50) e com scroll isolado */
+          <div className="fixed inset-0 z-50 bg-[#16120a] p-3 overflow-y-auto">
+            {/* O card de pergaminho agora ganha bordas arredondadas e não fica colado na tela */}
+            <div className="min-h-full bg-[#f4e4bc] rounded-[24px] p-5 pb-8 flex flex-col justify-start relative shadow-xl border border-[#8a6f2d]/20">
+              {/* Botão de Voltar Otimizado */}
+              <button 
+                type="button" 
+                onClick={() => setSelectedSpell(null)}
+                className="self-start mb-6 px-4 py-2 bg-[#1b1408] text-[#f4e4bc] text-xs font-mono font-bold uppercase tracking-wider rounded-xl border border-[#8a6f2d]/30 shadow-sm transition active:scale-95"
+              >
+                ← Voltar para a lista
+              </button>
+
+              {renderSpellDetail(true, false)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* VERSÃO PC */}
+      <div className="hidden md:grid md:grid-cols-2 gap-8 p-6 items-start">
+        {/* Coluna da Esquerda (Índice): col-span-1 */}
+        <div className="col-span-1 w-full space-y-4">
+          {renderSpellList(false)}
         </div>
 
-        <div className="md:hidden">
-          {renderSpellList(true)}
-          {mobileView === 'detail' && selectedSpell && (
-            /* VERSÃO MOBILE: Um modal clássico tradicional que cobre a tela, isola o scroll e mostra tudo sem cortes */
-            <div className="fixed inset-0 z-50 md:hidden bg-[#16120a] overflow-y-auto">
-              <div className="min-h-screen bg-[#f4e4bc] p-5 pb-24 flex flex-col justify-start">
-                {renderSpellDetail(true, true)}
-              </div>
+        {/* Coluna da Direita (Detalhes): col-span-1 */}
+        <div className="col-span-1 w-full">
+          {selectedSpell && (
+            <div className="w-full bg-[#f4e4bc] rounded-2xl p-5 border border-[#8a6f2d]/20 shadow-sm">
+              {renderSpellDetail(false, false)}
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {isModalOpen && selectedSpell && (
         <CastModal spell={selectedSpell} allSpells={spells} onClose={() => setIsModalOpen(false)} onConfirmCast={onCast} />
