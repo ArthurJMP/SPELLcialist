@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Spell } from '../models/spell';
 import { UNIVERSAL_SPELLS_CATALOG } from '../models/catalog/universalSpellsCatalog';
 import { SpellDetailModal } from './SpellDetailModal';
+import { SpellFilters } from './SpellFilters';
+import { CharacterClass } from '../models/types';
+import { CreateSpellModal } from './CreateSpellModal';
 
 interface CatalogViewProps {
   learnedSpells: Spell[];
@@ -9,126 +12,133 @@ interface CatalogViewProps {
 }
 
 export const CatalogView: React.FC<CatalogViewProps> = ({ learnedSpells, onLearnSpell }) => {
-  const [expandedLevels, setExpandedLevels] = useState<Set<number>>(new Set([]));
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<CharacterClass | 'Todas'>('Todas');
+  const [selectedLevel, setSelectedLevel] = useState<number | 'Todos'>('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [allSpells, setAllSpells] = useState<Spell[]>(UNIVERSAL_SPELLS_CATALOG);
+
   const learnedSpellNames = new Set(learnedSpells.map((spell) => spell.name));
 
-  const toggleLevel = (level: number) => {
-    setExpandedLevels((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(level)) {
-        newSet.delete(level);
-      } else {
-        newSet.add(level);
-      }
-      return newSet;
-    });
+  const handleLevelChange = (level: number | 'Todos') => {
+    setSelectedLevel(level);
   };
 
-  const levelLabel = (level: number) => (level === 0 ? 'Truques' : `${level}º Círculo`);
+  const handleSelectSpell = (spell: Spell) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
+  };
 
-  const spellsByLevel = Array.from({ length: 10 }, (_, level) =>
-    UNIVERSAL_SPELLS_CATALOG.filter((spell) => spell.level === level)
-  );
+  const handleSaveToSantuario = (newSpellFormData: any) => {
+    const newSpell: Spell = {
+      id: `custom-${Date.now()}`,
+      name: newSpellFormData.name,
+      level: newSpellFormData.level,
+      school: newSpellFormData.school || 'Evocação',
+      isRitual: newSpellFormData.isRitual || false,
+      originalDamageType: 'None',
+      castingTime: newSpellFormData.castingTime,
+      range: newSpellFormData.range,
+      target: 'Nenhum',
+      components: {
+        verbal: newSpellFormData.components.verbal,
+        somatic: newSpellFormData.components.somatic,
+        material: newSpellFormData.components.material,
+        materialDescription: newSpellFormData.materialDescription,
+      },
+      description: newSpellFormData.description,
+      classes: ['Mago'],
+    };
+    setAllSpells((prev) => [newSpell, ...prev]);
+  };
+
+  const filteredSpells = allSpells.filter((spell) => {
+    const matchesClass = selectedClass === 'Todas' || spell.classes.includes(selectedClass);
+    const matchesLevel = selectedLevel === 'Todos' || spell.level === selectedLevel;
+    const matchesSearch = spell.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesClass && matchesLevel && matchesSearch;
+  });
 
   return (
-    <div className="spellbook-page hide-scrollbar h-[calc(100vh-220px)] lg:h-[calc(100vh-200px)] 2xl:h-[calc(100vh-180px)] overflow-hidden rounded-[1.75rem] border border-[#b39b63]/60 bg-linear-to-b from-[#f8edcd] via-[#f4e4bc] to-[#ede8d3] p-4 sm:p-5 shadow-[inset_0_1px_3px_rgba(255,255,255,0.5),inset_0_-1px_3px_rgba(0,0,0,0.1)] flex flex-col">
-      <div className="flex items-start justify-between gap-4 border-b border-[#8a6f2d]/25 pb-4 mb-5 shrink-0">
-        <div>
-          <p className="font-label text-[9px] uppercase tracking-[0.4em] text-[#6e5a2d]/75">⚔️ Santuário Arcano ⚔️</p>
-          <h2 className="font-heading mt-2 text-4xl font-bold leading-tight text-[#1b1408] drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-            Tomo de Feitiços
-          </h2>
-          <p className="mt-2 text-sm text-[#5d4a25]/85 leading-relaxed">
-            Compêndio completo das magias arcanas disponíveis para transcrição em seu grimório
-          </p>
+    <div className="spellbook-page hide-scrollbar w-full h-[calc(100vh-5rem)] md:h-auto bg-linear-to-b from-[#f8edcd] via-[#f4e4bc] to-[#ede8d3] rounded-3xl md:rounded-2xl p-4 md:p-6 border border-[#b39b63]/60 shadow-[inset_0_1px_3px_rgba(255,255,255,0.5),inset_0_-1px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden relative shadow-lg">
+      <div className="space-y-6 flex-1 flex flex-col min-h-0">
+        {/* Área Superior: Títulos e o Componente de Filtro Integrado */}
+        <div className="flex flex-col gap-4 border-b border-[#8a6f2d]/10 pb-6 shrink-0">
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <p className="text-[10px] tracking-widest uppercase text-[#8a6f2d]/60 font-serif">Santuário Arcano</p>
+              <h1 className="text-3xl font-bold text-[#1b1408] font-heading mt-1">Tomo de Feitiços</h1>
+              <p className="text-xs italic text-[#8a6f2d]/80 mt-1 font-sans">Compêndio completo das magias arcanas disponíveis para transcrição.</p>
+            </div>
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-[#1b1408] text-[#f4e4bc] px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#1b1408]/90 transition"
+            >
+              + Inscrever Feitiço
+            </button>
+          </div>
+
+          <SpellFilters
+            selectedClass={selectedClass}
+            selectedLevel={selectedLevel}
+            onClassChange={setSelectedClass}
+            onLevelChange={handleLevelChange}
+          />
+
+          {/* Campo de Busca por Texto */}
+          <div className="w-full">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#8a6f2d]/60 text-xs">
+                🔍
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar magia pelo nome..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#1b1408]/5 border border-[#8a6f2d]/20 rounded-xl pl-9 pr-4 py-2 text-xs text-[#1b1408] placeholder-[#1b1408]/40 focus:outline-none focus:border-[#8a6f2d]/60 font-sans transition-colors"
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="min-h-0 flex-1 hide-scrollbar overflow-y-auto pr-2">
-        <div className="space-y-3.5">
-          {spellsByLevel.map((spellsInLevel, level) => {
-            if (spellsInLevel.length === 0) {
-              return null;
-            }
-
-            const isExpanded = expandedLevels.has(level);
-            const gradientColor = level === 0 ? '#d0bcff' : level <= 3 ? '#c5b8e8' : level <= 6 ? '#b8a8d8' : '#a898c8';
-
+      {/* Área Inferior: Grid de Magias Dinâmico */}
+      <div className="w-full flex-1 min-h-0 mt-4 pb-4">
+        {/* O h-full combinado com flex-1 força o grid a calcular o espaço exato que sobrou na tela do celular e travar o scroll ali dentro */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full overflow-y-auto pr-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {filteredSpells.map((spell) => {
+            const isLearned = learnedSpellNames.has(spell.name);
             return (
               <div
-                key={level}
-                className="rounded-3xl border-2 border-[#8a6f2d]/28 bg-linear-to-r from-[#f8edcd] to-[#f4e4bc] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.6)]"
+                key={spell.id}
+                onClick={() => handleSelectSpell(spell)}
+                className={`border rounded-2xl p-4 hover:shadow-md cursor-pointer transition flex flex-col justify-between h-24 ${
+                  isLearned
+                    ? 'border-[#8a6f2d]/15 bg-[#f4e4bc]/60 text-[#6e5a2d] cursor-default'
+                    : 'border-[#8a6f2d]/25 bg-[#1b1408] text-[#f4e4bc] hover:bg-[#2a1f18] hover:border-[#8a6f2d]/40'
+                }`}
               >
-                <button
-                  type="button"
-                  onClick={() => toggleLevel(level)}
-                  className="w-full flex items-center justify-between gap-3 border-b-2 border-[#8a6f2d]/18 p-4 hover:bg-[#f9f1dd] active:bg-[#f8ead0] transition-all duration-200"
-                >
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="font-label text-[8px] uppercase tracking-[0.4em] text-[#6e5a2d]/60">
-                      {level === 0 ? '✨ Truques Mágicos' : `⚡ Nível ${level}`}
-                    </p>
-                    <h3 className="font-heading text-xl font-bold text-[#1b1408] leading-tight mt-1">
-                      {levelLabel(level)}
-                    </h3>
+                <div>
+                  <div className="flex justify-between items-start gap-1">
+                    <h3 className="text-sm font-bold truncate line-clamp-1">{spell.name}</h3>
+                    {isLearned && <span className="text-xs font-bold text-[#6e5a2d] shrink-0">✓</span>}
                   </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span
-                      className="rounded-full px-3 py-1.5 text-[10px] font-bold text-white shadow-[0_2px_6px_rgba(0,0,0,0.25)]"
-                      style={{
-                        backgroundColor: gradientColor,
-                        boxShadow: `0 0 12px ${gradientColor}40, 0 2px 6px rgba(0,0,0,0.25)`
-                      }}
-                    >
-                      {spellsInLevel.length}
-                    </span>
-                    <span className={`text-[#1b1408] transition-all duration-300 transform text-lg font-bold
-                     ${ isExpanded ? 'rotate-180 scale-110' : 'scale-100'}`}> ▼ </span>
-                  </div>
-                </button>
-
-                {isExpanded && (
-                  <div className="p-4 space-y-2 bg-linear-to-b from-[#f8edcd]/30 to-transparent animate-in fade-in duration-300">
-                    {spellsInLevel.map((spell) => {
-                      const isLearned = learnedSpellNames.has(spell.name);
-
-                      return (
-                        <button
-                          key={spell.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedSpell(spell);
-                            setIsModalOpen(true);
-                          }}
-                          className={`w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border-1.5 flex items-center justify-between gap-3 group ${
-                            isLearned
-                              ? 'border-[#8a6f2d]/15 bg-[#f4e4bc]/60 text-[#6e5a2d] cursor-default'
-                              : 'border-[#8a6f2d]/25 bg-[#1b1408] text-[#f4e4bc] hover:bg-[#2a1f18] hover:border-[#8a6f2d]/40 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
-                          }`}
-                          disabled={isLearned}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`font-heading font-bold leading-tight text-sm ${
-                              isLearned ? 'text-[#6e5a2d]' : 'text-[#f4e4bc] group-hover:text-[#ffe088]'
-                            }`}>
-                              {spell.name}
-                            </h4>
-                          </div>
-                          {isLearned && (
-                            <span className="text-xs font-bold text-[#6e5a2d] shrink-0">✓</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                  <p className={`text-[10px] italic mt-0.5 ${isLearned ? 'text-[#8a6f2d]/90' : 'text-[#8a6f2d]'}`}>{spell.school}</p>
+                </div>
+                <div className={`flex justify-between items-center mt-2 pt-2 border-t text-[10px] font-mono ${
+                  isLearned ? 'border-[#8a6f2d]/10 text-[#6e5a2d]/60' : 'border-[#8a6f2d]/15 text-[#f4e4bc]/60'
+                }`}>
+                  <span>⏱️ {spell.castingTime}</span>
+                  <span>📏 {spell.range}</span>
+                </div>
               </div>
             );
           })}
         </div>
+      </div>
       </div>
 
       {selectedSpell && (
@@ -140,6 +150,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ learnedSpells, onLearn
           isAlreadyLearned={learnedSpellNames.has(selectedSpell.name)}
         />
       )}
+
+      <CreateSpellModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onSave={(newSpell) => {
+          handleSaveToSantuario(newSpell); 
+        }}
+      />
     </div>
   );
 };

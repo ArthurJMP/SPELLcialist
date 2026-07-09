@@ -13,21 +13,21 @@ type TabType = 'grimoire' | 'sanctuary' | 'skills' | 'chronicles';
 type SpellSlotInfo = {
   current: number;
   max: number;
-};
 
-const INITIAL_SPELL_SLOTS: Record<number, SpellSlotInfo> = {
-  1: { current: 4, max: 4 },
-  2: { current: 3, max: 3 },
-  3: { current: 3, max: 3 },
-  4: { current: 2, max: 2 },
-  5: { current: 1, max: 1 },
-  6: { current: 0, max: 1 },
-  7: { current: 0, max: 1 },
-  8: { current: 0, max: 1 },
-  9: { current: 0, max: 1 },
+};const INITIAL_SPELL_SLOTS: Record<number, SpellSlotInfo> = {
+  1: { current: 0, max: 0 },
+  2: { current: 0, max: 0 },
+  3: { current: 0, max: 0 },
+  4: { current: 0, max: 0 },
+  5: { current: 0, max: 0 },
+  6: { current: 0, max: 0 },
+  7: { current: 0, max: 0 },
+  8: { current: 0, max: 0 },
+  9: { current: 0, max: 0 },
 };
 
 export default function MainOrchestrator() {
+
   const [activeTab, setActiveTab] = useState<TabType>('grimoire');
   const [spellSlots, setSpellSlots] = useState<Record<number, SpellSlotInfo>>(INITIAL_SPELL_SLOTS);
   const learnedSpells = useLiveQuery(() => GrimoireController.getAllSpells()) || [];

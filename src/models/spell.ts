@@ -15,7 +15,7 @@ export interface Spell {
   school: SchoolType;
   isRitual: boolean;
   originalDamageType: DamageType;
-  currentDamageType: DamageType;
+  currentDamageType?: DamageType;
   castingTime: string;
   range: string; 
   areaOfEffect?: AreaOfEffect;               
